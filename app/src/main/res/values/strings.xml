@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">PhoneData</string>
+
+    <string name="btn_start">Start Test</string>
+    <string name="btn_stop">Stop Test</string>
 </resources>
