@@ -5,7 +5,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -14,6 +17,9 @@ import com.tct.phonedata.R;
 import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.MyConstant;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PhoneDataService extends Service {
 
     public static final int FORGROUND_ID = 0x88;
@@ -21,6 +27,9 @@ public class PhoneDataService extends Service {
     public static final String ACTION_START_TEST = "action_start_test";
     public static final String ACTION_STOP_TEST = "action_stop_test";
 
+
+    private SensorManager mSensorManager;
+    private List<Sensor> mSensorList = new ArrayList<Sensor>();
 
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
 
@@ -37,6 +46,8 @@ public class PhoneDataService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     }
 
     @Override
@@ -51,6 +62,7 @@ public class PhoneDataService extends Service {
             startMyForeground();
             Log.d(MyConstant.TAG, "startMyForeground show notification");
 
+            getAllSensor();
         } else if(ACTION_STOP_TEST.equals(mAction)){
             stopForeground(true);
             Log.d(MyConstant.TAG, "stopForeground hide notification");
@@ -92,6 +104,13 @@ public class PhoneDataService extends Service {
             startForeground(FORGROUND_ID, nb.build());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void getAllSensor(){
+        mSensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for (int i = 0; i < mSensorList.size(); i++) {
+            Log.w(MyConstant.TAG, i + ", sensor:" + mSensorList.get(i).toString());
         }
     }
 }

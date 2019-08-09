@@ -20,7 +20,7 @@ import com.tct.phonedata.utils.ShareUtil;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private final static String KEY_IS_TEST_RUNNING = "key_is_test_running";
+    public final static String KEY_IS_TEST_RUNNING = "key_is_test_running";
 
     private final static int MSG_UPDATE_BTN = 0;
 

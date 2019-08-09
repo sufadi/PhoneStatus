@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Intent;
 
 import com.tct.phonedata.service.PhoneDataService;
+import com.tct.phonedata.ui.MainActivity;
+import com.tct.phonedata.utils.ShareUtil;
 
 public class MyApplication extends Application {
 
@@ -11,6 +13,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         startService();
+
+        initRunnintTestFlag();
     }
 
     private void startService(){
@@ -19,4 +23,8 @@ public class MyApplication extends Application {
         startService(mIntent);
     }
 
+    private void initRunnintTestFlag(){
+        ShareUtil mShareUtil = new ShareUtil(this);
+        mShareUtil.setShare(MainActivity.KEY_IS_TEST_RUNNING, false);
+    }
 }
