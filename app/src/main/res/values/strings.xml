@@ -3,4 +3,7 @@
 
     <string name="btn_start">Start Test</string>
     <string name="btn_stop">Stop Test</string>
+
+    <string name="notification_title">Phone Data</string>
+    <string name="notification_Content">Running...</string>
 </resources>
