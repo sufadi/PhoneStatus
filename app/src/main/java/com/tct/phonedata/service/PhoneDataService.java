@@ -5,10 +5,9 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
 
 import com.tct.phonedata.R;
@@ -17,28 +16,45 @@ import com.tct.phonedata.utils.MyConstant;
 
 public class PhoneDataService extends Service {
 
-
     public static final int FORGROUND_ID = 0x88;
+
+    public static final String ACTION_START_TEST = "action_start_test";
+    public static final String ACTION_STOP_TEST = "action_stop_test";
+
+
+    private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
+
+    public class PhoneDataBinder extends Binder {
+
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mPhoneDataBinder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
-        startMyForeground();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (null == null) {
+        if (null == intent) {
             return super.onStartCommand(intent, flags, startId);
         }
         String mAction = intent.getAction();
         Log.d(MyConstant.TAG, "PhoneDataService onStartCommand mAction : " + mAction);
+
+        if (ACTION_START_TEST.equals(mAction)) {
+            startMyForeground();
+            Log.d(MyConstant.TAG, "startMyForeground show notification");
+
+        } else if(ACTION_STOP_TEST.equals(mAction)){
+            stopForeground(true);
+            Log.d(MyConstant.TAG, "stopForeground hide notification");
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -46,7 +62,6 @@ public class PhoneDataService extends Service {
     @Override
     public void onDestroy() {
         Log.d(MyConstant.TAG, "PhoneDataService onDestroy()");
-        stopForeground(true);
         super.onDestroy();
     }
 
