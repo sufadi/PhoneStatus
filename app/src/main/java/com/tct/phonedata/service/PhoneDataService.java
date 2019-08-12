@@ -142,6 +142,7 @@ public class PhoneDataService extends Service {
         mMaps = new HashMap<String, SensorInfo>();
         List<Sensor> list = mSensorManager.getSensorList(Sensor.TYPE_ALL);
 
+
         for (Sensor mSensor: list) {
             SensorInfo mSensorInfo = new SensorInfo();
             mSensorInfo.name = mSensor.getName();
