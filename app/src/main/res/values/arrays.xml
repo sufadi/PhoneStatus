@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spiner_arrays">
+        <item>Walk</item>
+        <item>Run</item>
+        <item>Other</item>
+    </string-array>
+</resources>

@@ -15,6 +15,7 @@ public class MyApplication extends Application {
         startService();
 
         initRunnintTestFlag();
+        initSceneModeFlag();
     }
 
     private void startService(){
@@ -27,4 +28,10 @@ public class MyApplication extends Application {
         ShareUtil mShareUtil = new ShareUtil(this);
         mShareUtil.setShare(MainActivity.KEY_IS_TEST_RUNNING, false);
     }
+
+    private void initSceneModeFlag(){
+        ShareUtil mShareUtil = new ShareUtil(this);
+        mShareUtil.setShare(MainActivity.KEY_SCENE_MODE, 0);
+    }
+
 }

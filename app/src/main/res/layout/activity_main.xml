@@ -7,10 +7,25 @@
     tools:context=".ui.MainActivity"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_info"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spinner_tv_title" />
+
+        <Spinner
+            android:id="@+id/sp_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/spiner_arrays"
+            android:layout_weight="1">
+
+        </Spinner>
+    </LinearLayout>
 
     <Button
         android:id="@+id/btn_start"
@@ -18,4 +33,8 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_start"/>
 
+    <TextView
+        android:id="@+id/tv_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

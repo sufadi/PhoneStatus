@@ -6,4 +6,6 @@
 
     <string name="notification_title">Phone Data</string>
     <string name="notification_Content">Running...</string>
+
+    <string name="spinner_tv_title">Select Scene Mode:</string>
 </resources>

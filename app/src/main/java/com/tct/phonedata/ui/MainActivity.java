@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.tct.phonedata.R;
@@ -27,6 +28,7 @@ import com.tct.phonedata.utils.ShareUtil;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    public final static String KEY_SCENE_MODE = "key_scene";
     public final static String KEY_IS_TEST_RUNNING = "key_is_test_running";
 
     private static int REQUEST_PERMISSION_CODE = 1;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView tv_info;
     private Button btn_start;
+    private Spinner sp_spinner;
 
     private class H extends Handler {
         private H(){
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initViews() {
+        sp_spinner = (Spinner)findViewById(R.id.sp_spinner);
         tv_info = (TextView) findViewById(R.id.tv_info);
         btn_start = (Button) findViewById(R.id.btn_start);
     }
@@ -79,11 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StringBuilder mSb = new StringBuilder();
         mSb.append("功能说明:\n");
         mSb.append("1. 实时监听所有传感器数据，并保存到 SD card 中，用于导出分析\n");
-        mSb.append("2. 所有传感器详细信息如下:\n");
-        mSb.append(DataToFileUtil.FILE_PATH);
-        mSb.append(DataToFileUtil.FILE_SENSOR_INFO);
-        mSb.append("\n");
-        mSb.append("3. 数据结果存放位置如下:\n");
+        mSb.append("2. 数据结果存放位置如下:\n");
         mSb.append(DataToFileUtil.FILE_PATH);
         mSb.append("\n");
 
@@ -118,6 +118,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     setTestRunningFlag(true);
                     mHandler.sendEmptyMessage(MSG_UPDATE_BTN);
+
+                    int mPosition = sp_spinner.getSelectedItemPosition();
+                    setSceneMode(mPosition);
+                    Log.d(MyConstant.TAG, "Spinner position : " + mPosition);
                 } else if(getString(R.string.btn_stop).equals(btn_start.getText())){
                     stopServiceTest();
 
@@ -179,8 +183,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mShareUtil.setShare(KEY_IS_TEST_RUNNING, value);
     }
 
+
+    private int getSceneMode() {
+        ShareUtil mShareUtil = new ShareUtil(this);
+        return mShareUtil.getInt(KEY_SCENE_MODE, 0);
+    }
+
+    private void setSceneMode(int value) {
+        ShareUtil mShareUtil = new ShareUtil(this);
+        mShareUtil.setShare(KEY_SCENE_MODE, value);
+    }
+
     private void updateUI(){
-        btn_start.setText(isTestRunning() ? getString(R.string.btn_stop) : getString(R.string.btn_start));
+        sp_spinner.setSelection(getSceneMode());
+
+        if (isTestRunning()) {
+            sp_spinner.setEnabled(false);
+            btn_start.setText(getString(R.string.btn_stop));
+        } else {
+            sp_spinner.setEnabled(true);
+            btn_start.setText(getString(R.string.btn_start));
+        }
     }
 
     private void bingMyService(){
