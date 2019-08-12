@@ -14,7 +14,7 @@ https://github.com/sufadi/PhoneStatus/tree/master/APK
 ## 4. 运行时数据
 #### 4.1 传感器参数信息
 例如 SensorInfo.log
-'''
+```
 SensorType: 1, Name: lsm6ds3c Accelerometer Wakeup, Description: {Sensor name="lsm6ds3c Accelerometer Wakeup", vendor="STMicro", version=140549, type=1, maxRange=78.4532, resolution=0.0023928226, power=0.15, minDelay=2404}
 SensorType: 1, Name: lsm6ds3c Accelerometer Non-wakeup, Description: {Sensor name="lsm6ds3c Accelerometer Non-wakeup", vendor="STMicro", version=140549, type=1, maxRange=78.4532, resolution=0.0023928226, power=0.15, minDelay=2404}
 SensorType: 2, Name: ak0991x Magnetometer Wakeup, Description: {Sensor name="ak0991x Magnetometer Wakeup", vendor="akm", version=131118, type=2, maxRange=4912.0, resolution=0.15, power=1.1, minDelay=10000}
@@ -55,10 +55,10 @@ SensorType: 35, Name: lsm6ds3c Accelerometer-Uncalibrated Wakeup, Description: {
 SensorType: 35, Name: lsm6ds3c Accelerometer-Uncalibrated Non-wakeup, Description: {Sensor name="lsm6ds3c Accelerometer-Uncalibrated Non-wakeup", vendor="STMicro", version=140549, type=35, maxRange=78.4532, resolution=0.0023928226, power=0.15, minDelay=2404}
 SensorType: 33171002, Name: bu52053nvx Hall Effect Sensor Wakeup, Description: {Sensor name="bu52053nvx Hall Effect Sensor Wakeup", vendor="ROHM", version=393221, type=33171002, maxRange=1.0, resolution=1.0, power=0.005, minDelay=0}
 SensorType: 33171002, Name: bu52053nvx Hall Effect Sensor Non-wakeup, Description: {Sensor name="bu52053nvx Hall Effect Sensor Non-wakeup", vendor="ROHM", version=393221, type=33171002, maxRange=1.0, resolution=1.0, power=0.005, minDelay=0}
-'''
+```
 #### 4.2 传感器数据
 例如 tcs3707 Ambient Light Sensor Wakeup_value.log
-'''
+```
 Time    Screen    Value[0]    Value[1]    Value[2]    Value[3]    Value[4]    Value[5]    Value[6]    Value[7]
 2019-08-12 15:58:38.978,on,94.954056,85.272,35.571,29.160002,28.664999,99.0,512.0,5685.6436
 2019-08-12 15:58:39.090,on,107.41739,84.645004,34.719,28.44,27.884998,99.0,512.0,5697.833
@@ -70,7 +70,7 @@ Time    Screen    Value[0]    Value[1]    Value[2]    Value[3]    Value[4]    Va
 2019-08-12 15:58:39.776,on,94.42798,85.69,35.784,29.340002,28.859999,99.0,512.0,5687.287
 2019-08-12 15:58:39.889,on,106.89134,85.063,34.932,28.62,28.079998,99.0,512.0,5699.427
 2019-08-12 15:58:40.009,on,94.02845,85.481,35.571,29.340002,28.859999,99.0,512.0,5714.7363
-'''
+```
 
 
 
