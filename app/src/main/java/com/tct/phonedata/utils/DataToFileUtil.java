@@ -51,16 +51,19 @@ public class DataToFileUtil {
         writeFile(FILE_NAME_TYPE, content);
     }
 
-    public static void writeFileSensorInfo(String content) {
-        File file = new File(FILE_PATH + FILE_SENSOR_INFO);
-        if (file.exists()) {
-            return;
-        }
-
-        writeFile(FILE_SENSOR_INFO, content);
-    }
-
     public static void writeFileDataValue(String content) {
         writeFile(FILE_NAME_VALUE, content);
+    }
+
+    public static boolean isFileSensorExit(){
+        File file = new File(FILE_PATH + FILE_SENSOR_INFO);
+        if (file.exists()) {
+            return true;
+        }
+        return false;
+    }
+
+    public static void writeFileSensorInfo(String content) {
+        writeFile(FILE_SENSOR_INFO, content);
     }
 }

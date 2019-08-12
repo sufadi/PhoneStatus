@@ -14,10 +14,14 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.tct.phonedata.R;
+import com.tct.phonedata.bean.SensorInfo;
 import com.tct.phonedata.ui.MainActivity;
+import com.tct.phonedata.utils.DataToFileUtil;
 import com.tct.phonedata.utils.MyConstant;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class PhoneDataService extends Service {
@@ -29,7 +33,7 @@ public class PhoneDataService extends Service {
 
 
     private SensorManager mSensorManager;
-    private List<Sensor> mSensorList = new ArrayList<Sensor>();
+    private List<SensorInfo> mSensorList = new ArrayList<SensorInfo>();
 
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
 
@@ -48,6 +52,8 @@ public class PhoneDataService extends Service {
         Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        initSensorListInfo();
+        recordAllSensorInfo();
     }
 
     @Override
@@ -62,8 +68,7 @@ public class PhoneDataService extends Service {
             startMyForeground();
             Log.d(MyConstant.TAG, "startMyForeground show notification");
 
-            getAllSensor();
-        } else if(ACTION_STOP_TEST.equals(mAction)){
+        } else if(ACTION_STOP_TEST.equals(mAction)) {
             stopForeground(true);
             Log.d(MyConstant.TAG, "stopForeground hide notification");
         }
@@ -107,10 +112,47 @@ public class PhoneDataService extends Service {
         }
     }
 
-    private void getAllSensor(){
-        mSensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for (int i = 0; i < mSensorList.size(); i++) {
-            Log.w(MyConstant.TAG, i + ", sensor:" + mSensorList.get(i).toString());
+    private void initSensorListInfo(){
+        List<Sensor> list = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for (Sensor mSensor: list) {
+            SensorInfo mSensorInfo = new SensorInfo();
+            mSensorInfo.name = mSensor.getName();
+            mSensorInfo.type = mSensor.getType();
+            mSensorInfo.description = mSensor.toString();
+
+            mSensorList.add(mSensorInfo);
+        }
+
+        Collections.sort(mSensorList, mComparator);
+
+    }
+
+    Comparator<SensorInfo> mComparator = new Comparator<SensorInfo>() {
+        @Override
+        public int compare(SensorInfo o1, SensorInfo o2) {
+            return o1.type - o2.type;
+        }
+    };
+
+    private void recordAllSensorInfo(){
+        if (DataToFileUtil.isFileSensorExit()) {
+            return;
+        }
+
+        if (null != mSensorList && !mSensorList.isEmpty()){
+
+            for (int i = 0; i < mSensorList.size(); i++) {
+                Log.w(MyConstant.TAG, "recordAllSensorInfo:" + mSensorList.get(i).description);
+                StringBuilder mSb = new StringBuilder();
+                mSb.append("SensorType:");
+                mSb.append(mSensorList.get(i).type);
+                mSb.append(",Name: ");
+                mSb.append(mSensorList.get(i).name);
+                mSb.append(", Description: ");
+                mSb.append(mSensorList.get(i).description);
+
+                DataToFileUtil.writeFileSensorInfo(mSb.toString());
+            }
         }
     }
 }
