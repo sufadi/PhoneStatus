@@ -26,6 +26,7 @@ import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.DataToFileUtil;
 import com.tct.phonedata.utils.DateTimeUtil;
 import com.tct.phonedata.utils.MyConstant;
+import com.tct.phonedata.utils.UuidUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +43,7 @@ public class PhoneDataService extends Service {
     public static final String ACTION_STOP_TEST = "action_stop_test";
 
 
+    private String mUUID;
     private int mSceneMode;
     private boolean isScreenOn;
     private String mFilePath;
@@ -68,7 +70,8 @@ public class PhoneDataService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
+        mUUID = UuidUtils.getDeviceUUID(this);
+        Log.d(MyConstant.TAG, "PhoneDataService onCreate() + mUUID:" + mUUID);
 
         PowerManager mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         isScreenOn = mPm.isInteractive();
