@@ -118,10 +118,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     setTestRunningFlag(true);
                     mHandler.sendEmptyMessage(MSG_UPDATE_BTN);
-
-                    int mPosition = sp_spinner.getSelectedItemPosition();
-                    setSceneMode(mPosition);
-                    Log.d(MyConstant.TAG, "Spinner position : " + mPosition);
                 } else if(getString(R.string.btn_stop).equals(btn_start.getText())){
                     stopServiceTest();
 
@@ -216,9 +212,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startServiceTest(){
-        Log.d(MyConstant.TAG, "startServiceTest");
+        int mPosition = sp_spinner.getSelectedItemPosition();
+        setSceneMode(mPosition);
+        Log.d(MyConstant.TAG, "startServiceTest,Spinner position = " + mPosition);
+
         Intent intent = new Intent();
         intent.setClass(this, PhoneDataService.class);
+        intent.putExtra(KEY_SCENE_MODE, mPosition);
         intent.setAction(PhoneDataService.ACTION_START_TEST);
         startService(intent);
     }

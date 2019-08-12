@@ -42,6 +42,7 @@ public class PhoneDataService extends Service {
     public static final String ACTION_STOP_TEST = "action_stop_test";
 
 
+    private int mSceneMode;
     private boolean isScreenOn;
     private String mFilePath;
     private HashMap<String, SensorInfo> mMaps;
@@ -87,6 +88,9 @@ public class PhoneDataService extends Service {
         Log.d(MyConstant.TAG, "PhoneDataService onStartCommand mAction : " + mAction);
 
         if (ACTION_START_TEST.equals(mAction)) {
+            mSceneMode = intent.getIntExtra(MainActivity.KEY_SCENE_MODE, 0);
+            Log.d(MyConstant.TAG, "PhoneDataService SceneMode = " + mSceneMode);
+
             mFilePath = DataToFileUtil.FILE_PATH  + DateTimeUtil.getFileSysTime();
 
             startMyForeground();
