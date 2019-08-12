@@ -1,4 +1,7 @@
 # PhoneStatus
+- Git仓库地址
+https://github.com/sufadi/PhoneStatus/tree/hongkong
+
 ## 1 需求
 - user_id, type(walk, run, other), time, accelerometer（x,y,z）, linear_acceleration(x,y,z), gyroscope(x,y,z), magnetometer(x,y,z),orientation（azimuth,pitch,roll）
 1. userid 只要能区分用户就行
