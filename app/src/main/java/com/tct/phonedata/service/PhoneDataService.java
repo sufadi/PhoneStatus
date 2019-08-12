@@ -5,9 +5,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
@@ -32,9 +36,12 @@ public class PhoneDataService extends Service {
     public static final String ACTION_STOP_TEST = "action_stop_test";
 
 
+    private boolean isScreenOn;
+
     private SensorManager mSensorManager;
     private List<SensorInfo> mSensorList = new ArrayList<SensorInfo>();
 
+    private PhoneDataBroadCast mPhoneDataBroadCast;
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
 
     public class PhoneDataBinder extends Binder {
@@ -51,6 +58,7 @@ public class PhoneDataService extends Service {
         super.onCreate();
         Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
 
+        mPhoneDataBroadCast = new PhoneDataBroadCast(this);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         initSensorListInfo();
         recordAllSensorInfo();
@@ -121,6 +129,8 @@ public class PhoneDataService extends Service {
             mSensorInfo.description = mSensor.toString();
 
             mSensorList.add(mSensorInfo);
+
+            mSensorManager.registerListener(mSensorEventListener, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
         Collections.sort(mSensorList, mComparator);
@@ -144,14 +154,55 @@ public class PhoneDataService extends Service {
             for (int i = 0; i < mSensorList.size(); i++) {
                 Log.w(MyConstant.TAG, "recordAllSensorInfo:" + mSensorList.get(i).description);
                 StringBuilder mSb = new StringBuilder();
-                mSb.append("SensorType:");
+                mSb.append("SensorType: ");
                 mSb.append(mSensorList.get(i).type);
-                mSb.append(",Name: ");
+                mSb.append(", Name: ");
                 mSb.append(mSensorList.get(i).name);
                 mSb.append(", Description: ");
                 mSb.append(mSensorList.get(i).description);
 
                 DataToFileUtil.writeFileSensorInfo(mSb.toString());
+            }
+        }
+    }
+
+    private SensorEventListener mSensorEventListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float[] mResult = event.values;
+            for (int i = 0; i < mResult.length; i++) {
+                Log.w(MyConstant.TAG, "onSensorChanged Type: " + event.sensor.getType() + ", Name: " + event.sensor.getName()  + ", result["+ i +"] value: " + mResult[i]);
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    };
+
+    private class PhoneDataBroadCast extends BroadcastReceiver {
+
+        public PhoneDataBroadCast(Context mContext){
+            IntentFilter mIt = new IntentFilter();
+            mIt.addAction(Intent.ACTION_SCREEN_OFF);
+            mIt.addAction(Intent.ACTION_SCREEN_ON);
+            mContext.registerReceiver(this, mIt);
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (null == intent) {
+                return;
+            }
+
+            String mAction = intent.getAction();
+            if (Intent.ACTION_SCREEN_ON.equals(mAction)) {
+                isScreenOn = true;
+                Log.d(MyConstant.TAG, "screen on");
+            } else if (Intent.ACTION_SCREEN_OFF.equals(mAction)) {
+                isScreenOn = false;
+                Log.d(MyConstant.TAG, "screen off");
             }
         }
     }
