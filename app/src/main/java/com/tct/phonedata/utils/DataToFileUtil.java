@@ -15,17 +15,17 @@ public class DataToFileUtil {
 
     public final static String FILE_SENSOR_INFO = Build.BRAND + "_SensorInfo.log";
 
-    public static void writeFile(String fileName, String content) {
+    public static void writeFile(String filePath, String fileName, String content) {
         String strContent = content + "\n";
         try {
-            File fileDir = new File(FILE_PATH);
+            File fileDir = new File(filePath);
             if (!fileDir.exists()) {
                 fileDir.mkdirs();
                 if (!fileDir.exists()) {
                     return;
                 }
             }
-            File file = new File(FILE_PATH, fileName);
+            File file = new File(filePath, fileName);
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
             raf.seek(file.length());
             raf.write(strContent.getBytes());
@@ -33,26 +33,6 @@ public class DataToFileUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static void delFileDataValue() {
-        File file = new File(FILE_PATH + FILE_NAME_VALUE);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
-
-    public static void writeFileDataTyp(String content) {
-        File file = new File(FILE_PATH + FILE_NAME_TYPE);
-        if (file.exists()) {
-            return;
-        }
-
-        writeFile(FILE_NAME_TYPE, content);
-    }
-
-    public static void writeFileDataValue(String content) {
-        writeFile(FILE_NAME_VALUE, content);
     }
 
     public static boolean isFileSensorExit(){
@@ -64,6 +44,23 @@ public class DataToFileUtil {
     }
 
     public static void writeFileSensorInfo(String content) {
-        writeFile(FILE_SENSOR_INFO, content);
+        writeFile(FILE_PATH, FILE_SENSOR_INFO, content);
+    }
+
+    public static void writeFileDataTyp(String content) {
+        File file = new File(FILE_PATH + FILE_NAME_TYPE);
+        if (file.exists()) {
+            return;
+        }
+
+        writeFile(FILE_PATH, FILE_NAME_TYPE, content);
+    }
+
+    public static void writeFileDataValue(String content) {
+        writeFile(FILE_PATH, FILE_NAME_VALUE, content);
+    }
+
+    public static void writeFileDataValue(String filePath, String fileName, String content) {
+        writeFile(filePath, fileName, content);
     }
 }

@@ -17,9 +17,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.tct.phonedata.R;
 import com.tct.phonedata.service.PhoneDataService;
+import com.tct.phonedata.utils.DataToFileUtil;
 import com.tct.phonedata.utils.MyConstant;
 import com.tct.phonedata.utils.ShareUtil;
 
@@ -38,8 +40,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private H mHandler = new H();
     private PhoneDataService.PhoneDataBinder mPhoneDataBinder;
 
+    private TextView tv_info;
     private Button btn_start;
-
 
     private class H extends Handler {
         private H(){
@@ -69,10 +71,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initViews() {
+        tv_info = (TextView) findViewById(R.id.tv_info);
         btn_start = (Button) findViewById(R.id.btn_start);
     }
 
     private void initValues() {
+        StringBuilder mSb = new StringBuilder();
+        mSb.append("功能说明:\n");
+        mSb.append("1. 实时监听所有传感器数据，并保存到 SD card 中，用于导出分析\n");
+        mSb.append("2. 所有传感器详细信息如下:\n");
+        mSb.append(DataToFileUtil.FILE_PATH);
+        mSb.append(DataToFileUtil.FILE_SENSOR_INFO);
+        mSb.append("\n");
+        mSb.append("3. 数据结果存放位置如下:\n");
+        mSb.append(DataToFileUtil.FILE_PATH);
+        mSb.append("\n");
+
+        tv_info.setText(mSb.toString());
     }
 
     private void initListenser() {
@@ -144,6 +159,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mPhoneDataBinder = (PhoneDataService.PhoneDataBinder) service;
+            String mResultFilePath = mPhoneDataBinder.getResultFilePath();
+            Log.d(MyConstant.TAG, "ResultFilePath :" + mResultFilePath);
         }
 
         @Override

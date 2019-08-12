@@ -14,19 +14,25 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 import com.tct.phonedata.R;
 import com.tct.phonedata.bean.SensorInfo;
+import com.tct.phonedata.bean.SensorInfoSorted;
 import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.DataToFileUtil;
+import com.tct.phonedata.utils.DateTimeUtil;
 import com.tct.phonedata.utils.MyConstant;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PhoneDataService extends Service {
 
@@ -37,14 +43,19 @@ public class PhoneDataService extends Service {
 
 
     private boolean isScreenOn;
+    private String mFilePath;
+    private HashMap<String, SensorInfo> mMaps;
 
     private SensorManager mSensorManager;
-    private List<SensorInfo> mSensorList = new ArrayList<SensorInfo>();
 
     private PhoneDataBroadCast mPhoneDataBroadCast;
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
 
     public class PhoneDataBinder extends Binder {
+
+        public String getResultFilePath(){
+            return mFilePath;
+        }
 
     }
 
@@ -57,6 +68,9 @@ public class PhoneDataService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
+
+        PowerManager mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        isScreenOn = mPm.isInteractive();
 
         mPhoneDataBroadCast = new PhoneDataBroadCast(this);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -73,12 +87,15 @@ public class PhoneDataService extends Service {
         Log.d(MyConstant.TAG, "PhoneDataService onStartCommand mAction : " + mAction);
 
         if (ACTION_START_TEST.equals(mAction)) {
-            startMyForeground();
-            Log.d(MyConstant.TAG, "startMyForeground show notification");
+            mFilePath = DataToFileUtil.FILE_PATH  + DateTimeUtil.getFileSysTime();
 
+            startMyForeground();
+
+            registerSensorListener();
         } else if(ACTION_STOP_TEST.equals(mAction)) {
             stopForeground(true);
-            Log.d(MyConstant.TAG, "stopForeground hide notification");
+
+            unRegisterSensorListener();
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -91,6 +108,7 @@ public class PhoneDataService extends Service {
     }
 
     private void startMyForeground() {
+        Log.d(MyConstant.TAG, "startMyForeground show notification");
         Log.d(MyConstant.TAG, "PhoneDataService startMyForeground sdk :" + android.os.Build.VERSION.SDK_INT);
         Notification.Builder nb =  new Notification.Builder(this);
 
@@ -121,25 +139,22 @@ public class PhoneDataService extends Service {
     }
 
     private void initSensorListInfo(){
+        mMaps = new HashMap<String, SensorInfo>();
         List<Sensor> list = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+
         for (Sensor mSensor: list) {
             SensorInfo mSensorInfo = new SensorInfo();
             mSensorInfo.name = mSensor.getName();
             mSensorInfo.type = mSensor.getType();
-            mSensorInfo.description = mSensor.toString();
+            mSensorInfo.sensor = mSensor;
 
-            mSensorList.add(mSensorInfo);
-
-            mSensorManager.registerListener(mSensorEventListener, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            mMaps.put(mSensorInfo.name, mSensorInfo);
         }
-
-        Collections.sort(mSensorList, mComparator);
-
     }
 
-    Comparator<SensorInfo> mComparator = new Comparator<SensorInfo>() {
+    Comparator<SensorInfoSorted> mComparator = new Comparator<SensorInfoSorted>() {
         @Override
-        public int compare(SensorInfo o1, SensorInfo o2) {
+        public int compare(SensorInfoSorted o1, SensorInfoSorted o2) {
             return o1.type - o2.type;
         }
     };
@@ -148,6 +163,19 @@ public class PhoneDataService extends Service {
         if (DataToFileUtil.isFileSensorExit()) {
             return;
         }
+        List<SensorInfoSorted> mSensorList = new ArrayList<SensorInfoSorted>();
+
+        List<Sensor> list = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for (Sensor mSensor: list) {
+            SensorInfoSorted mSensorInfo = new SensorInfoSorted();
+            mSensorInfo.name = mSensor.getName();
+            mSensorInfo.type = mSensor.getType();
+            mSensorInfo.description = mSensor.toString();
+
+            mSensorList.add(mSensorInfo);
+        }
+
+        Collections.sort(mSensorList, mComparator);
 
         if (null != mSensorList && !mSensorList.isEmpty()){
 
@@ -166,13 +194,68 @@ public class PhoneDataService extends Service {
         }
     }
 
+    private void registerSensorListener(){
+        Log.w(MyConstant.TAG, "registerSensorListener");
+
+        if (null != mMaps && !mMaps.isEmpty()) {
+            for (Map.Entry<String, SensorInfo> entry : mMaps.entrySet()) {
+                entry.getValue().isFistLoading = true;
+                mSensorManager.registerListener(mSensorEventListener, entry.getValue().sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+        }
+    }
+
+    private void unRegisterSensorListener(){
+        Log.w(MyConstant.TAG, "unRegisterSensorListener");
+        if (null != mMaps && !mMaps.isEmpty()) {
+            for (Map.Entry<String, SensorInfo> entry : mMaps.entrySet()) {
+                entry.getValue().isFistLoading = false;
+                entry.getValue().fileName = null;
+                mSensorManager.unregisterListener(mSensorEventListener, entry.getValue().sensor);
+            }
+        }
+    }
+
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            float[] mResult = event.values;
-            for (int i = 0; i < mResult.length; i++) {
-                Log.w(MyConstant.TAG, "onSensorChanged Type: " + event.sensor.getType() + ", Name: " + event.sensor.getName()  + ", result["+ i +"] value: " + mResult[i]);
+            if (null == event || null == event.sensor) {
+                return;
             }
+
+            String name = event.sensor.getName();
+            float[] mResult = event.values;
+
+            if (mMaps.containsKey(name)) {
+                if (mMaps.get(name).isFistLoading) {
+                    // creat file name and file title
+                    mMaps.get(name).fileName = Build.BRAND + "_" + name + "_value.log";
+                    DataToFileUtil.writeFile(mFilePath, mMaps.get(name).fileName, createTile(event.values.length));
+                    mMaps.get(name).isFistLoading = false;
+
+                    Log.w(MyConstant.TAG, mFilePath + "/fileName : " + mMaps.get(name).fileName);
+                }
+
+                if (mMaps.get(name).fileName != null) {
+                    StringBuilder mSb = new StringBuilder();
+                    mSb.append(DateTimeUtil.getSysTime());
+                    mSb.append(",");
+                    mSb.append(isScreenOn ? "on":"off");
+
+                    for (int i = 0; i < mResult.length; i++) {
+                        mSb.append(",");
+                        mSb.append(mResult[i]);
+                    }
+
+                    DataToFileUtil.writeFile(mFilePath, mMaps.get(name).fileName, mSb.toString());
+                    Log.d(MyConstant.TAG, "name : " + name + ", result :" + mSb.toString());
+                }
+            } else {
+                Log.e(MyConstant.TAG, "Can't reach name = " + name);
+            }
+
+
+
         }
 
         @Override
@@ -180,6 +263,16 @@ public class PhoneDataService extends Service {
 
         }
     };
+
+    private String createTile(int resultSize) {
+        String title = "Time" + "    Screen";
+        for (int i = 0; i < resultSize; i++) {
+            title = title + "    Value["+ i + "]";
+        }
+        Log.d(MyConstant.TAG, "createTile : " + title);
+        return title;
+    }
+
 
     private class PhoneDataBroadCast extends BroadcastReceiver {
 

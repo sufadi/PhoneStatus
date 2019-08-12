@@ -1,10 +1,16 @@
 package com.tct.phonedata.bean;
 
-public class SensorInfo {
+import android.hardware.Sensor;
 
+public class SensorInfo {
     public String name;
 
     public int type;
 
-    public String description;
+    public boolean isFistLoading;
+
+    public String fileName;
+
+    public Sensor sensor;
+
 }

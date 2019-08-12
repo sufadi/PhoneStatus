@@ -12,6 +12,10 @@ public class DateTimeUtil {
         return getDate(new Date(System.currentTimeMillis()), "yyyy-MM-dd HH:mm:ss.SSS");
     }
 
+    public static String getFileSysTime() {
+        return getDate(new Date(System.currentTimeMillis()), "yyyy-MM-dd HH-mm-ss");
+    }
+
     public static String getYmdTime() {
         return getDate(new Date(System.currentTimeMillis()), "yyyy-MM-dd");
     }
