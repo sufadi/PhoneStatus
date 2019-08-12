@@ -199,8 +199,14 @@ public class PhoneDataService extends Service {
 
         if (null != mMaps && !mMaps.isEmpty()) {
             for (Map.Entry<String, SensorInfo> entry : mMaps.entrySet()) {
+                // filter non-wakeup sensor
+                if (entry.getValue().name.contains("Non-wakeup")) {
+                    Log.w(MyConstant.TAG, "registerSensorListener filter non-wakeup sensor " + entry.getValue().name);
+                    continue;
+                }
+
                 entry.getValue().isFistLoading = true;
-                mSensorManager.registerListener(mSensorEventListener, entry.getValue().sensor, SensorManager.SENSOR_DELAY_NORMAL);
+                mSensorManager.registerListener(mSensorEventListener, entry.getValue().sensor, SensorManager.SENSOR_DELAY_GAME);
             }
         }
     }
@@ -209,6 +215,11 @@ public class PhoneDataService extends Service {
         Log.w(MyConstant.TAG, "unRegisterSensorListener");
         if (null != mMaps && !mMaps.isEmpty()) {
             for (Map.Entry<String, SensorInfo> entry : mMaps.entrySet()) {
+                if (entry.getValue().name.contains("Non-wakeup")) {
+                    Log.w(MyConstant.TAG, "unRegisterSensorListener filter non-wakeup sensor " + entry.getValue().name);
+                    continue;
+                }
+
                 entry.getValue().isFistLoading = false;
                 entry.getValue().fileName = null;
                 mSensorManager.unregisterListener(mSensorEventListener, entry.getValue().sensor);
