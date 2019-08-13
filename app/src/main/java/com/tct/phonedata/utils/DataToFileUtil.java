@@ -9,7 +9,7 @@ import android.os.Environment;
 public class DataToFileUtil {
     public final static String FILE_PATH = Environment.getExternalStorageDirectory() + "/PhoneData/";
 
-    public final static String FILE_NAME_VALUE = Build.BRAND + "_" + DateTimeUtil.getSysTime() + "_Data_value.log";
+    public final static String FILE_NAME_VALUE = Build.BRAND + "_" + DateTimeUtil.getFileSysTime() + "_Data_value.log";
 
     public final static String FILE_NAME_TYPE = Build.BRAND + "_Data_name.log";
 

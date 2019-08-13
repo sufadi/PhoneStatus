@@ -16,7 +16,7 @@ https://github.com/sufadi/PhoneStatus/tree/hongkong
 PS：当传感器不存在时使用getOrientation(float[] R, float values[])代替
 
 #### 1.1 其他要求
-1. SensorManager.SENSOR_DELAY_GAME(20000微秒), 50Hz,即设定频率是50次/s;
+1. SensorManager.SENSOR_DELAY_GAME(20000微秒),即设定频率是50次/s;
 2. 为了取数据训练模型,Sensor 使用wakeup类型;
 3. 新增定时器
 
