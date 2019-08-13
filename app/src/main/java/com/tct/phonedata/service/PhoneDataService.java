@@ -172,12 +172,14 @@ public class PhoneDataService extends Service {
 
     private Sensor mAccSensor;
     private Sensor mLineAccSensor;
+    private Sensor mGyroSensor;
 
     private void initSensors() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, true);
         mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, true);
+        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE, true);
     }
 
 
@@ -188,13 +190,15 @@ public class PhoneDataService extends Service {
         mCustomSensorInfo.isFistLoading = true;
 
         //mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
+        //mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void unRegisterSensorListener(){
         Log.w(MyConstant.TAG, "unRegisterSensorListener");
         //mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
-        mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
+        //mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
+        mSensorManager.unregisterListener(mSensorEventListener, mGyroSensor);
     }
 
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
@@ -224,6 +228,17 @@ public class PhoneDataService extends Service {
                         Log.d(MyConstant.TAG, "onSensorChanged line-accelerometer (x,y,z) = (" + mCustomSensorInfo.linear_acceleration_x + " , "+ mCustomSensorInfo.linear_acceleration_y + " , "+ mCustomSensorInfo.linear_acceleration_z + " )");
                     } else {
                         Log.e(MyConstant.TAG, "Can't reach error line-accelerometer");
+                    }
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    Log.d(MyConstant.TAG, "onSensorChanged gyro size = " + event.values.length);
+                    if (event.values.length == 3) {
+                        mCustomSensorInfo.gyroscope_x = event.values[0];
+                        mCustomSensorInfo.gyroscope_y = event.values[1];
+                        mCustomSensorInfo.gyroscope_z = event.values[2];
+                        Log.d(MyConstant.TAG, "onSensorChanged gyro(x,y,z) = (" + mCustomSensorInfo.gyroscope_x + " , "+ mCustomSensorInfo.gyroscope_y + " , "+ mCustomSensorInfo.gyroscope_z + " )");
+                    } else {
+                        Log.e(MyConstant.TAG, "Can't reach error gyro");
                     }
                     break;
             }
