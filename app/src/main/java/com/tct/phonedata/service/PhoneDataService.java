@@ -12,7 +12,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import com.tct.phonedata.R;
@@ -21,12 +24,14 @@ import com.tct.phonedata.bean.SensorInfoSorted;
 import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.DataToFileUtil;
 import com.tct.phonedata.utils.MyConstant;
-import com.tct.phonedata.utils.UuidUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.tct.phonedata.utils.MyConstant.TAG;
 
 public class PhoneDataService extends Service {
 
@@ -36,12 +41,67 @@ public class PhoneDataService extends Service {
     public static final String ACTION_STOP_TEST = "action_stop_test";
     public static final String ACTION_RECORD_SENSOR_INFO = "action_record_sensor_info";
 
+    private static final int MSG_VIRTUAL_ORIENTATION_SENSOR_CAL = 0;
 
     private int mSceneMode;
 
+    //记录 rotationMatrix 矩阵值
+    private float[] mRotationMatrixF = new float[9];
+    //记录通过getOrientation()计算出来的方位横滚俯仰值
+    private float[] mVirtualOrientationF = new float[3];
+    private float[] mAccF = null;
+    private float[] mMagneticF = null;
+
+    private Sensor mAccSensor;
+    private Sensor mLineAccSensor;
+    private Sensor mGyroSensor;
+    private Sensor mMagneticSensor;
+    private Sensor mOrientationSensor;
+    private boolean isVirtualOrientationSensorSupport;
+
+    private MainHandle mMainHandle;
     private SensorManager mSensorManager;
     private CustomSensorInfo mCustomSensorInfo;
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
+
+    private static class MainHandle extends Handler {
+
+        private final WeakReference<PhoneDataService> mRefService;
+
+        public MainHandle(PhoneDataService service) {
+            mRefService = new WeakReference<>(service);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            PhoneDataService service = mRefService.get();
+            if (service == null) {
+                return;
+            }
+
+            switch (msg.what) {
+                case MSG_VIRTUAL_ORIENTATION_SENSOR_CAL:
+
+                    if (service.mAccF != null && service.mMagneticF != null) {
+                        if (SensorManager.getRotationMatrix(service.mRotationMatrixF, null, service.mAccF, service.mMagneticF)) {
+                            SensorManager.getOrientation(service.mRotationMatrixF, service.mVirtualOrientationF);
+                            if (service.mVirtualOrientationF.length == 3) {
+                                service.mCustomSensorInfo.azimuth = service.mVirtualOrientationF[0];
+                                service.mCustomSensorInfo.pitch = service.mVirtualOrientationF[1];
+                                service.mCustomSensorInfo.roll = service.mVirtualOrientationF[2];
+
+                                service.recordSensorDataToLogFile(service.mCustomSensorInfo);
+                                Log.d(MyConstant.TAG, "onSensorChanged virtualOrientationF(x,y,z) = (" + service.mCustomSensorInfo.azimuth + " , "+ service.mCustomSensorInfo.pitch + " , "+ service.mCustomSensorInfo.roll + " )");
+                            } else {
+                                Log.e(MyConstant.TAG, "error can not reach leanth = " + service.mVirtualOrientationF.length);
+                            }
+                        }
+                    }
+                    break;
+            }
+
+        }
+    }
 
     public class PhoneDataBinder extends Binder {
 
@@ -59,7 +119,10 @@ public class PhoneDataService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
+        Log.d(TAG, "PhoneDataService onCreate()");
+
+        mMainHandle = new MainHandle(PhoneDataService.this);
+
         initSensors();
         recordAllSensorInfo();
     }
@@ -70,11 +133,11 @@ public class PhoneDataService extends Service {
             return super.onStartCommand(intent, flags, startId);
         }
         String mAction = intent.getAction();
-        Log.d(MyConstant.TAG, "PhoneDataService onStartCommand mAction : " + mAction);
+        Log.d(TAG, "PhoneDataService onStartCommand mAction : " + mAction);
 
         if (ACTION_START_TEST.equals(mAction)) {
             mSceneMode = intent.getIntExtra(MainActivity.KEY_SCENE_MODE, 0);
-            Log.d(MyConstant.TAG, "PhoneDataService SceneMode = " + mSceneMode);
+            Log.d(TAG, "PhoneDataService SceneMode = " + mSceneMode);
 
             startMyForeground();
 
@@ -92,14 +155,14 @@ public class PhoneDataService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(MyConstant.TAG, "PhoneDataService onDestroy()");
+        Log.d(TAG, "PhoneDataService onDestroy()");
         mCustomSensorInfo = null;
         super.onDestroy();
     }
 
     private void startMyForeground() {
-        Log.d(MyConstant.TAG, "startMyForeground show notification");
-        Log.d(MyConstant.TAG, "PhoneDataService startMyForeground sdk :" + android.os.Build.VERSION.SDK_INT);
+        Log.d(TAG, "startMyForeground show notification");
+        Log.d(TAG, "PhoneDataService startMyForeground sdk :" + android.os.Build.VERSION.SDK_INT);
         Notification.Builder nb =  new Notification.Builder(this);
 
         if (android.os.Build.VERSION.SDK_INT >= 26) {
@@ -156,7 +219,7 @@ public class PhoneDataService extends Service {
         if (null != mSensorList && !mSensorList.isEmpty()){
 
             for (int i = 0; i < mSensorList.size(); i++) {
-                Log.w(MyConstant.TAG, "recordAllSensorInfo:" + mSensorList.get(i).description);
+                Log.w(TAG, "recordAllSensorInfo:" + mSensorList.get(i).description);
                 StringBuilder mSb = new StringBuilder();
                 mSb.append("SensorType: ");
                 mSb.append(mSensorList.get(i).type);
@@ -170,12 +233,6 @@ public class PhoneDataService extends Service {
         }
     }
 
-    private Sensor mAccSensor;
-    private Sensor mLineAccSensor;
-    private Sensor mGyroSensor;
-    private Sensor mMagneticSensor;
-    private Sensor mOrientationSensor;
-
     private void initSensors() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -188,7 +245,10 @@ public class PhoneDataService extends Service {
 
 
     private void registerSensorListener(){
-        Log.w(MyConstant.TAG, "registerSensorListener");
+        Log.w(TAG, "registerSensorListener");
+        mAccF = null;
+        mMagneticF = null;
+
         mCustomSensorInfo = new CustomSensorInfo();
         mCustomSensorInfo.type = mSceneMode;
         mCustomSensorInfo.isFistLoading = true;
@@ -196,36 +256,41 @@ public class PhoneDataService extends Service {
         if (null != mAccSensor) {
             mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
         } else {
-            Log.w(MyConstant.TAG, "mAccSensor sensor is non-existent");
+            Log.w(TAG, "mAccSensor sensor is non-existent");
         }
 
         if (null != mLineAccSensor) {
             mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
         } else {
-            Log.w(MyConstant.TAG, "mLineAccSensor sensor is non-existent");
+            Log.w(TAG, "mLineAccSensor sensor is non-existent");
         }
 
         if (null != mGyroSensor) {
             mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
         } else {
-            Log.w(MyConstant.TAG, "mGyroSensor sensor is non-existent");
+            Log.w(TAG, "mGyroSensor sensor is non-existent");
         }
 
         if(null != mMagneticSensor) {
             mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SensorManager.SENSOR_DELAY_GAME);
         } else {
-            Log.w(MyConstant.TAG, "mMagneticSensor sensor is non-existent");
+            Log.w(TAG, "mMagneticSensor sensor is non-existent");
         }
 
         if (mOrientationSensor != null) {
             mSensorManager.registerListener(mSensorEventListener, mOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
+            isVirtualOrientationSensorSupport = false;
         } else {
-            Log.w(MyConstant.TAG, "orientation sensor is non-existent");
+            Log.w(TAG, "orientation sensor is non-existent");
+            if (mMagneticSensor != null && mAccSensor != null) {
+                isVirtualOrientationSensorSupport = true;
+                Log.w(TAG, "virual orientation sensor is Support!!!");
+            }
         }
     }
 
     private void unRegisterSensorListener(){
-        Log.w(MyConstant.TAG, "unRegisterSensorListener");
+        Log.w(TAG, "unRegisterSensorListener");
         if (null != mAccSensor) {
             mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
         }
@@ -256,58 +321,63 @@ public class PhoneDataService extends Service {
             int mSensorType = event.sensor.getType();
             switch (mSensorType) {
                 case Sensor.TYPE_ACCELEROMETER:
-                    Log.d(MyConstant.TAG, "onSensorChanged accelerometer size = " + event.values.length);
                     if (event.values.length == 3) {
                         mCustomSensorInfo.accelerometer_x = event.values[0];
                         mCustomSensorInfo.accelerometer_y = event.values[1];
                         mCustomSensorInfo.accelerometer_z = event.values[2];
-                        Log.d(MyConstant.TAG, "onSensorChanged accelerometer (x,y,z) = (" + mCustomSensorInfo.accelerometer_x + " , "+ mCustomSensorInfo.accelerometer_y + " , "+ mCustomSensorInfo.accelerometer_z + " )");
+
+                        if (isVirtualOrientationSensorSupport) {
+                            mAccF = event.values;
+                            mMainHandle.sendEmptyMessage(MSG_VIRTUAL_ORIENTATION_SENSOR_CAL);
+                        }
+                        Log.d(TAG, "onSensorChanged accelerometer (x,y,z) = (" + mCustomSensorInfo.accelerometer_x + " , "+ mCustomSensorInfo.accelerometer_y + " , "+ mCustomSensorInfo.accelerometer_z + " )");
                     } else {
-                        Log.e(MyConstant.TAG, "Can't reach error AccSensor");
+                        Log.e(TAG, "Can't reach error AccSensor size" + event.values.length);
                     }
                     break;
                 case Sensor.TYPE_LINEAR_ACCELERATION:
-                    Log.d(MyConstant.TAG, "onSensorChanged line-accelerometer size = " + event.values.length);
                     if (event.values.length == 3) {
                         mCustomSensorInfo.linear_acceleration_x = event.values[0];
                         mCustomSensorInfo.linear_acceleration_y = event.values[1];
                         mCustomSensorInfo.linear_acceleration_z = event.values[2];
-                        Log.d(MyConstant.TAG, "onSensorChanged line-accelerometer (x,y,z) = (" + mCustomSensorInfo.linear_acceleration_x + " , "+ mCustomSensorInfo.linear_acceleration_y + " , "+ mCustomSensorInfo.linear_acceleration_z + " )");
+                        Log.d(TAG, "onSensorChanged line-accelerometer (x,y,z) = (" + mCustomSensorInfo.linear_acceleration_x + " , "+ mCustomSensorInfo.linear_acceleration_y + " , "+ mCustomSensorInfo.linear_acceleration_z + " )");
                     } else {
-                        Log.e(MyConstant.TAG, "Can't reach error line-accelerometer");
+                        Log.e(TAG, "Can't reach error line-accelerometer size" + event.values.length);
                     }
                     break;
                 case Sensor.TYPE_GYROSCOPE:
-                    Log.d(MyConstant.TAG, "onSensorChanged gyro size = " + event.values.length);
                     if (event.values.length == 3) {
                         mCustomSensorInfo.gyroscope_x = event.values[0];
                         mCustomSensorInfo.gyroscope_y = event.values[1];
                         mCustomSensorInfo.gyroscope_z = event.values[2];
-                        Log.d(MyConstant.TAG, "onSensorChanged gyro(x,y,z) = (" + mCustomSensorInfo.gyroscope_x + " , "+ mCustomSensorInfo.gyroscope_y + " , "+ mCustomSensorInfo.gyroscope_z + " )");
+                        Log.d(TAG, "onSensorChanged gyro(x,y,z) = (" + mCustomSensorInfo.gyroscope_x + " , "+ mCustomSensorInfo.gyroscope_y + " , "+ mCustomSensorInfo.gyroscope_z + " )");
                     } else {
-                        Log.e(MyConstant.TAG, "Can't reach error gyro");
+                        Log.e(TAG, "Can't reach error gyro size" + event.values.length);
                     }
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
-                    Log.d(MyConstant.TAG, "onSensorChanged magnetic size = " + event.values.length);
                     if (event.values.length == 3) {
                         mCustomSensorInfo.magnetometer_x = event.values[0];
                         mCustomSensorInfo.magnetometer_y = event.values[1];
                         mCustomSensorInfo.magnetometer_z = event.values[2];
-                        Log.d(MyConstant.TAG, "onSensorChanged magnetic(x,y,z) = (" + mCustomSensorInfo.magnetometer_x + " , "+ mCustomSensorInfo.magnetometer_y + " , "+ mCustomSensorInfo.magnetometer_z + " )");
+                        Log.d(TAG, "onSensorChanged magnetic(x,y,z) = (" + mCustomSensorInfo.magnetometer_x + " , "+ mCustomSensorInfo.magnetometer_y + " , "+ mCustomSensorInfo.magnetometer_z + " )");
+
+                        if (isVirtualOrientationSensorSupport) {
+                            mMagneticF = event.values;
+                            mMainHandle.sendEmptyMessage(MSG_VIRTUAL_ORIENTATION_SENSOR_CAL);
+                        }
                     } else {
-                        Log.e(MyConstant.TAG, "Can't reach error magnetic");
+                        Log.e(TAG, "Can't reach error magnetic size" + event.values.length);
                     }
                     break;
                 case Sensor.TYPE_ORIENTATION:
-                    Log.d(MyConstant.TAG, "onSensorChanged orientation size = " + event.values.length);
                     if (event.values.length == 3) {
                         mCustomSensorInfo.azimuth = event.values[0];
                         mCustomSensorInfo.pitch = event.values[1];
                         mCustomSensorInfo.roll = event.values[2];
-                        Log.d(MyConstant.TAG, "onSensorChanged orientation(x,y,z) = (" + mCustomSensorInfo.azimuth + " , "+ mCustomSensorInfo.pitch + " , "+ mCustomSensorInfo.roll + " )");
+                        Log.d(TAG, "onSensorChanged orientation(x,y,z) = (" + mCustomSensorInfo.azimuth + " , "+ mCustomSensorInfo.pitch + " , "+ mCustomSensorInfo.roll + " )");
                     } else {
-                        Log.e(MyConstant.TAG, "Can't reach error orientation");
+                        Log.e(TAG, "Can't reach error orientation size" + event.values.length);
                     }
                     break;
             }
@@ -371,7 +441,7 @@ public class PhoneDataService extends Service {
             mSb.append("magnetometer_z");
         }
 
-        if (mOrientationSensor != null) {
+        if (mOrientationSensor != null || isVirtualOrientationSensorSupport) {
             mSb.append(",");
             mSb.append("azimuth");
             mSb.append(",");
@@ -430,7 +500,7 @@ public class PhoneDataService extends Service {
             mStringBuilder.append(mSensor.magnetometer_z);
         }
 
-        if (mOrientationSensor != null) {
+        if (mOrientationSensor != null || isVirtualOrientationSensorSupport) {
             mStringBuilder.append(",");
             mStringBuilder.append(mSensor.azimuth);
             mStringBuilder.append(",");
@@ -440,6 +510,5 @@ public class PhoneDataService extends Service {
         }
 
         DataToFileUtil.writeFileDataValue(mStringBuilder.toString());
-
     }
 }
