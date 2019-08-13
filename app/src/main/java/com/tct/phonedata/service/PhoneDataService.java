@@ -173,6 +173,7 @@ public class PhoneDataService extends Service {
     private Sensor mAccSensor;
     private Sensor mLineAccSensor;
     private Sensor mGyroSensor;
+    private Sensor mMagneticSensor;
 
     private void initSensors() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -180,6 +181,7 @@ public class PhoneDataService extends Service {
         mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, true);
         mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, true);
         mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE, true);
+        mMagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD, true);
     }
 
 
@@ -191,14 +193,16 @@ public class PhoneDataService extends Service {
 
         //mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
         //mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
+        //mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void unRegisterSensorListener(){
         Log.w(MyConstant.TAG, "unRegisterSensorListener");
         //mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
         //mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
-        mSensorManager.unregisterListener(mSensorEventListener, mGyroSensor);
+        //mSensorManager.unregisterListener(mSensorEventListener, mGyroSensor);
+        mSensorManager.unregisterListener(mSensorEventListener, mMagneticSensor);
     }
 
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
@@ -239,6 +243,17 @@ public class PhoneDataService extends Service {
                         Log.d(MyConstant.TAG, "onSensorChanged gyro(x,y,z) = (" + mCustomSensorInfo.gyroscope_x + " , "+ mCustomSensorInfo.gyroscope_y + " , "+ mCustomSensorInfo.gyroscope_z + " )");
                     } else {
                         Log.e(MyConstant.TAG, "Can't reach error gyro");
+                    }
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    Log.d(MyConstant.TAG, "onSensorChanged magnetic size = " + event.values.length);
+                    if (event.values.length == 3) {
+                        mCustomSensorInfo.magnetometer_x = event.values[0];
+                        mCustomSensorInfo.magnetometer_y = event.values[1];
+                        mCustomSensorInfo.magnetometer_z = event.values[2];
+                        Log.d(MyConstant.TAG, "onSensorChanged magnetic(x,y,z) = (" + mCustomSensorInfo.magnetometer_x + " , "+ mCustomSensorInfo.magnetometer_y + " , "+ mCustomSensorInfo.magnetometer_z + " )");
+                    } else {
+                        Log.e(MyConstant.TAG, "Can't reach error magnetic");
                     }
                     break;
             }
