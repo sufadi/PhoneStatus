@@ -1,5 +1,7 @@
 package com.tct.phonedata.bean;
 
+import com.tct.phonedata.utils.UuidUtils;
+
 public class CustomSensorInfo {
 
     /**
@@ -15,6 +17,7 @@ public class CustomSensorInfo {
      * #define SENSOR_TYPE_LINEAR_ACCELERATION 10//线性加速度
      * #define SENSOR_TYPE_ROTATION_VECTOR     11//旋转矢量
      */
+    public boolean isFistLoading;
 
     /**
      * UUID
@@ -70,6 +73,10 @@ public class CustomSensorInfo {
     public float pitch;
 
     public float roll;
+
+    public CustomSensorInfo(){
+        user_id = UuidUtils.getUUIDByBuildId();
+    }
 
     @Override
     public String toString() {

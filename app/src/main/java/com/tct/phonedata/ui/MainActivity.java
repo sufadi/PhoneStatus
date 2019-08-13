@@ -143,6 +143,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (mCount != permissions.length) {
                 Log.i(MyConstant.TAG, "not allow sdcard read and write, so finish self!");
                 finish();
+            } else {
+                startRecordAllSensorInfo();
             }
         }
     }
@@ -229,6 +231,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent();
         intent.setClass(this, PhoneDataService.class);
         intent.setAction(PhoneDataService.ACTION_STOP_TEST);
+        startService(intent);
+    }
+
+    private void startRecordAllSensorInfo() {
+        Log.d(MyConstant.TAG, "startRecordAllSensorInfo");
+        Intent intent = new Intent();
+        intent.setClass(this, PhoneDataService.class);
+        intent.setAction(PhoneDataService.ACTION_RECORD_SENSOR_INFO);
         startService(intent);
     }
 }

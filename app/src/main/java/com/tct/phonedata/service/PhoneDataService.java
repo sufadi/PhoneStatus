@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.tct.phonedata.R;
+import com.tct.phonedata.bean.CustomSensorInfo;
 import com.tct.phonedata.bean.SensorInfoSorted;
 import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.DataToFileUtil;
@@ -33,13 +34,13 @@ public class PhoneDataService extends Service {
 
     public static final String ACTION_START_TEST = "action_start_test";
     public static final String ACTION_STOP_TEST = "action_stop_test";
+    public static final String ACTION_RECORD_SENSOR_INFO = "action_record_sensor_info";
 
 
-    private String mUUID;
     private int mSceneMode;
 
     private SensorManager mSensorManager;
-
+    private CustomSensorInfo mCustomSensorInfo;
     private PhoneDataBinder mPhoneDataBinder = new PhoneDataBinder();
 
     public class PhoneDataBinder extends Binder {
@@ -58,10 +59,8 @@ public class PhoneDataService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mUUID = UuidUtils.getDeviceUUID(this);
-        Log.d(MyConstant.TAG, "PhoneDataService onCreate() + UUID:" + mUUID);
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        Log.d(MyConstant.TAG, "PhoneDataService onCreate()");
+        initSensors();
         recordAllSensorInfo();
     }
 
@@ -84,6 +83,8 @@ public class PhoneDataService extends Service {
             stopForeground(true);
 
             unRegisterSensorListener();
+        } else if(ACTION_RECORD_SENSOR_INFO.equals(mAction)) {
+            recordAllSensorInfo();
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -92,6 +93,7 @@ public class PhoneDataService extends Service {
     @Override
     public void onDestroy() {
         Log.d(MyConstant.TAG, "PhoneDataService onDestroy()");
+        mCustomSensorInfo = null;
         super.onDestroy();
     }
 
@@ -168,19 +170,70 @@ public class PhoneDataService extends Service {
         }
     }
 
+    private Sensor mAccSensor;
+    private Sensor mLineAccSensor;
+
+    private void initSensors() {
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, true);
+        mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, true);
+    }
+
+
     private void registerSensorListener(){
         Log.w(MyConstant.TAG, "registerSensorListener");
+        mCustomSensorInfo = new CustomSensorInfo();
+        mCustomSensorInfo.type = mSceneMode;
+        mCustomSensorInfo.isFistLoading = true;
+
+        //mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
     }
 
     private void unRegisterSensorListener(){
         Log.w(MyConstant.TAG, "unRegisterSensorListener");
-
+        //mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
+        mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
     }
 
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
+
+
         @Override
         public void onSensorChanged(SensorEvent event) {
+            int mSensorType = event.sensor.getType();
+            switch (mSensorType) {
+                case Sensor.TYPE_ACCELEROMETER:
+                    Log.d(MyConstant.TAG, "onSensorChanged accelerometer size = " + event.values.length);
+                    if (event.values.length == 3) {
+                        mCustomSensorInfo.accelerometer_x = event.values[0];
+                        mCustomSensorInfo.accelerometer_y = event.values[1];
+                        mCustomSensorInfo.accelerometer_z = event.values[2];
+                        Log.d(MyConstant.TAG, "onSensorChanged accelerometer (x,y,z) = (" + mCustomSensorInfo.accelerometer_x + " , "+ mCustomSensorInfo.accelerometer_y + " , "+ mCustomSensorInfo.accelerometer_z + " )");
+                    } else {
+                        Log.e(MyConstant.TAG, "Can't reach error AccSensor");
+                    }
+                    break;
+                case Sensor.TYPE_LINEAR_ACCELERATION:
+                    Log.d(MyConstant.TAG, "onSensorChanged line-accelerometer size = " + event.values.length);
+                    if (event.values.length == 3) {
+                        mCustomSensorInfo.linear_acceleration_x = event.values[0];
+                        mCustomSensorInfo.linear_acceleration_y = event.values[1];
+                        mCustomSensorInfo.linear_acceleration_z = event.values[2];
+                        Log.d(MyConstant.TAG, "onSensorChanged line-accelerometer (x,y,z) = (" + mCustomSensorInfo.linear_acceleration_x + " , "+ mCustomSensorInfo.linear_acceleration_y + " , "+ mCustomSensorInfo.linear_acceleration_z + " )");
+                    } else {
+                        Log.e(MyConstant.TAG, "Can't reach error line-accelerometer");
+                    }
+                    break;
+            }
 
+            if (mCustomSensorInfo.isFistLoading) {
+                mCustomSensorInfo.isFistLoading = false;
+                createLogFileTitle();
+            }
+
+            DataToFileUtil.writeFileDataValue(mCustomSensorInfo.toString());
         }
 
         @Override
@@ -188,5 +241,46 @@ public class PhoneDataService extends Service {
 
         }
     };
+
+    private void createLogFileTitle() {
+        StringBuilder mSb = new StringBuilder();
+        mSb.append("user_id");
+        mSb.append(",");
+        mSb.append("type");
+        mSb.append(",");
+        mSb.append("time");
+        mSb.append(",");
+        mSb.append("accelerometer_x");
+        mSb.append(",");
+        mSb.append("accelerometer_y");
+        mSb.append(",");
+        mSb.append("accelerometer_z");
+        mSb.append(",");
+        mSb.append("linear_acceleration_x");
+        mSb.append(",");
+        mSb.append("linear_acceleration_y");
+        mSb.append(",");
+        mSb.append("linear_acceleration_z");
+        mSb.append(",");
+        mSb.append("gyroscope_x");
+        mSb.append(",");
+        mSb.append("gyroscope_y");
+        mSb.append(",");
+        mSb.append("gyroscope_z");
+        mSb.append(",");
+        mSb.append("magnetometer_x");
+        mSb.append(",");
+        mSb.append("magnetometer_y");
+        mSb.append(",");
+        mSb.append("magnetometer_z");
+        mSb.append(",");
+        mSb.append("azimuth");
+        mSb.append(",");
+        mSb.append("pitch");
+        mSb.append(",");
+        mSb.append("roll");
+
+        DataToFileUtil.writeFileDataValue(mSb.toString());
+    }
 
 }

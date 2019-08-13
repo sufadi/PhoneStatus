@@ -16,6 +16,7 @@ https://github.com/sufadi/PhoneStatus/tree/hongkong
 #### 1.1 其他要求
 1. SensorManager.SENSOR_DELAY_GAME(20000微秒), 50Hz,即设定频率是50次/s;
 2. 为了取数据训练模型,Sensor 使用wakeup类型;
+3. 新增定时器
 
 ## 2 功能说明
 实时监听所有传感器数据，并保存到 SD card 中，用于导出分析;

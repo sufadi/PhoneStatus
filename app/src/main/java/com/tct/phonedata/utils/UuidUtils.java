@@ -9,45 +9,25 @@ import java.util.UUID;
 
 public class UuidUtils {
 
-    public static String getDeviceUUID(Context context) {
-        String uuid = loadDeviceUUID(context);
-        if (TextUtils.isEmpty(uuid)) {
-            uuid = buildDeviceUUID(context);
-            saveDeviceUUID(context, uuid);
+    //获得独一无二的Psuedo ID
+    public static String getUUIDByBuildId() {
+        String serial = null;
+        String m_szDevIDShort = "35" +  Build.BOARD.length()%10+ Build.BRAND.length()%10 +
+                Build.CPU_ABI.length()%10 + Build.DEVICE.length()%10 +
+                Build.DISPLAY.length()%10 + Build.HOST.length()%10 +
+                Build.ID.length()%10 + Build.MANUFACTURER.length()%10 +
+                Build.MODEL.length()%10 + Build.PRODUCT.length()%10 +
+                Build.TAGS.length()%10 + Build.TYPE.length()%10 +
+                Build.USER.length()%10 ; //13 位
+        try {
+            serial = android.os.Build.class.getField("SERIAL").get(null).toString();
+            //API>=9 使用serial号
+            return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
+        } catch (Exception exception) {
+            //serial需要一个初始化        serial = "serial"; // 随便一个初始化
         }
-        return uuid;
-    }
-
-    private static String buildDeviceUUID(Context context) {
-        String androidId = getAndroidId(context);
-        return new UUID(androidId.hashCode(), getBuildInfo().hashCode()).toString();
-    }
-
-    private static void saveDeviceUUID(Context context, String uuid) {
-        context.getSharedPreferences("device_uuid", Context.MODE_PRIVATE)
-                .edit()
-                .putString("uuid", uuid)
-                .apply();
-    }
-
-    public static String getBuildInfo() {
-        //这里选用了几个不会随系统更新而改变的值
-        StringBuffer buildSB = new StringBuffer();
-        buildSB.append(Build.BRAND).append("/");
-        buildSB.append(Build.PRODUCT).append("/");
-        buildSB.append(Build.DEVICE).append("/");
-        buildSB.append(Build.ID).append("/");
-        buildSB.append(Build.VERSION.INCREMENTAL);
-        return buildSB.toString();
-        //        return Build.FINGERPRINT;
-    }
-
-    private static String loadDeviceUUID(Context context) {
-        return context.getSharedPreferences("device_uuid", Context.MODE_PRIVATE)
-                .getString("uuid", null);
-    }
-
-    public static String getAndroidId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        // 使用硬件信息拼凑出来的15位号码
+        return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
+        // 最终会得到这样的一串ID：00000000-28ee-3eab-ffff-ffffe9374e72
     }
 }
