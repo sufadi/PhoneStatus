@@ -56,8 +56,8 @@ public class DataToFileUtil {
         writeFile(FILE_PATH, FILE_NAME_TYPE, content);
     }
 
-    public static void writeFileDataValue(String content) {
-        writeFile(FILE_PATH, FILE_NAME_VALUE, content);
+    public static void writeFileDataValue(String mFileName, String content) {
+        writeFile(FILE_PATH, mFileName, content);
     }
 
     public static void writeFileDataValue(String filePath, String fileName, String content) {

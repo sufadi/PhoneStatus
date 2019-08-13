@@ -12,6 +12,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -23,6 +24,7 @@ import com.tct.phonedata.bean.CustomSensorInfo;
 import com.tct.phonedata.bean.SensorInfoSorted;
 import com.tct.phonedata.ui.MainActivity;
 import com.tct.phonedata.utils.DataToFileUtil;
+import com.tct.phonedata.utils.DateTimeUtil;
 import com.tct.phonedata.utils.MyConstant;
 
 import java.lang.ref.WeakReference;
@@ -42,6 +44,8 @@ public class PhoneDataService extends Service {
     public static final String ACTION_RECORD_SENSOR_INFO = "action_record_sensor_info";
 
     private static final int MSG_VIRTUAL_ORIENTATION_SENSOR_CAL = 0;
+
+    private String mFileName;
 
     private int mSceneMode;
 
@@ -248,6 +252,7 @@ public class PhoneDataService extends Service {
         Log.w(TAG, "registerSensorListener");
         mAccF = null;
         mMagneticF = null;
+        mFileName = Build.BRAND + "_" + DateTimeUtil.getFileSysTime() + "_Data_value.log";
 
         mCustomSensorInfo = new CustomSensorInfo();
         mCustomSensorInfo.type = mSceneMode;
@@ -451,7 +456,7 @@ public class PhoneDataService extends Service {
         }
 
 
-        DataToFileUtil.writeFileDataValue(mSb.toString());
+        DataToFileUtil.writeFileDataValue(mFileName, mSb.toString());
     }
 
     private void recordSensorDataToLogFile(CustomSensorInfo mSensor) {
@@ -509,6 +514,6 @@ public class PhoneDataService extends Service {
             mStringBuilder.append(mSensor.roll);
         }
 
-        DataToFileUtil.writeFileDataValue(mStringBuilder.toString());
+        DataToFileUtil.writeFileDataValue(mFileName, mStringBuilder.toString());
     }
 }
