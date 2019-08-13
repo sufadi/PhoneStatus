@@ -12,6 +12,7 @@ https://github.com/sufadi/PhoneStatus/tree/hongkong
 7. gyroscope（x,y,z）:gyroscope_x, gyroscope_y,gyroscope_z
 8. magnetometer（x,y,z）:magnetometer_x, magnetometer_y,magnetometer_z
 9. orientation（azimuth,pitch,roll）:azimuth, pitch,roll
+PS：当传感器不存在时使用getOrientation(float[] R, float values[])代替
 
 #### 1.1 其他要求
 1. SensorManager.SENSOR_DELAY_GAME(20000微秒), 50Hz,即设定频率是50次/s;

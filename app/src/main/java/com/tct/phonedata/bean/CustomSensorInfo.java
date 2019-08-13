@@ -74,55 +74,16 @@ public class CustomSensorInfo {
 
     public float roll;
 
+    /**
+     * SENSOR_TYPE_ORIENTATION_VECTOR
+     */
+    public float rotation_vector_x;
+
+    public float rotation_vector_y;
+
+    public float rotation_vector_z;
+
     public CustomSensorInfo(){
         user_id = UuidUtils.getUUIDByBuildId();
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder mStringBuilder = new StringBuilder();
-        mStringBuilder.append(user_id);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(type);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(System.currentTimeMillis());
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(accelerometer_x);
-        mStringBuilder.append(",");
-        mStringBuilder.append(accelerometer_y);
-        mStringBuilder.append(",");
-        mStringBuilder.append(accelerometer_z);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(linear_acceleration_x);
-        mStringBuilder.append(",");
-        mStringBuilder.append(linear_acceleration_y);
-        mStringBuilder.append(",");
-        mStringBuilder.append(linear_acceleration_z);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(gyroscope_x);
-        mStringBuilder.append(",");
-        mStringBuilder.append(gyroscope_y);
-        mStringBuilder.append(",");
-        mStringBuilder.append(gyroscope_z);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(magnetometer_x);
-        mStringBuilder.append(",");
-        mStringBuilder.append(magnetometer_y);
-        mStringBuilder.append(",");
-        mStringBuilder.append(magnetometer_z);
-        mStringBuilder.append(",");
-
-        mStringBuilder.append(azimuth);
-        mStringBuilder.append(",");
-        mStringBuilder.append(pitch);
-        mStringBuilder.append(",");
-        mStringBuilder.append(roll);
-        return mStringBuilder.toString();
     }
 }

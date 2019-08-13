@@ -174,6 +174,7 @@ public class PhoneDataService extends Service {
     private Sensor mLineAccSensor;
     private Sensor mGyroSensor;
     private Sensor mMagneticSensor;
+    private Sensor mOrientationSensor;
 
     private void initSensors() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -182,6 +183,7 @@ public class PhoneDataService extends Service {
         mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, true);
         mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE, true);
         mMagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD, true);
+        mOrientationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION, true);
     }
 
 
@@ -191,18 +193,59 @@ public class PhoneDataService extends Service {
         mCustomSensorInfo.type = mSceneMode;
         mCustomSensorInfo.isFistLoading = true;
 
-        //mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
-        //mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
-        //mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SensorManager.SENSOR_DELAY_GAME);
+        if (null != mAccSensor) {
+            mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
+        } else {
+            Log.w(MyConstant.TAG, "mAccSensor sensor is non-existent");
+        }
+
+        if (null != mLineAccSensor) {
+            mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
+        } else {
+            Log.w(MyConstant.TAG, "mLineAccSensor sensor is non-existent");
+        }
+
+        if (null != mGyroSensor) {
+            mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
+        } else {
+            Log.w(MyConstant.TAG, "mGyroSensor sensor is non-existent");
+        }
+
+        if(null != mMagneticSensor) {
+            mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SensorManager.SENSOR_DELAY_GAME);
+        } else {
+            Log.w(MyConstant.TAG, "mMagneticSensor sensor is non-existent");
+        }
+
+        if (mOrientationSensor != null) {
+            mSensorManager.registerListener(mSensorEventListener, mOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
+        } else {
+            Log.w(MyConstant.TAG, "orientation sensor is non-existent");
+        }
     }
 
     private void unRegisterSensorListener(){
         Log.w(MyConstant.TAG, "unRegisterSensorListener");
-        //mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
-        //mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
-        //mSensorManager.unregisterListener(mSensorEventListener, mGyroSensor);
-        mSensorManager.unregisterListener(mSensorEventListener, mMagneticSensor);
+        if (null != mAccSensor) {
+            mSensorManager.unregisterListener(mSensorEventListener, mAccSensor);
+        }
+
+        if (null != mLineAccSensor) {
+            mSensorManager.unregisterListener(mSensorEventListener, mLineAccSensor);
+        }
+
+        if (null != mGyroSensor) {
+            mSensorManager.unregisterListener(mSensorEventListener, mGyroSensor);
+        }
+
+        if (null != mMagneticSensor) {
+            mSensorManager.unregisterListener(mSensorEventListener, mMagneticSensor);
+        }
+
+        if (mOrientationSensor != null ) {
+            mSensorManager.unregisterListener(mSensorEventListener, mOrientationSensor);
+        }
+
     }
 
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
@@ -256,6 +299,17 @@ public class PhoneDataService extends Service {
                         Log.e(MyConstant.TAG, "Can't reach error magnetic");
                     }
                     break;
+                case Sensor.TYPE_ORIENTATION:
+                    Log.d(MyConstant.TAG, "onSensorChanged orientation size = " + event.values.length);
+                    if (event.values.length == 3) {
+                        mCustomSensorInfo.azimuth = event.values[0];
+                        mCustomSensorInfo.pitch = event.values[1];
+                        mCustomSensorInfo.roll = event.values[2];
+                        Log.d(MyConstant.TAG, "onSensorChanged orientation(x,y,z) = (" + mCustomSensorInfo.azimuth + " , "+ mCustomSensorInfo.pitch + " , "+ mCustomSensorInfo.roll + " )");
+                    } else {
+                        Log.e(MyConstant.TAG, "Can't reach error orientation");
+                    }
+                    break;
             }
 
             if (mCustomSensorInfo.isFistLoading) {
@@ -263,7 +317,7 @@ public class PhoneDataService extends Service {
                 createLogFileTitle();
             }
 
-            DataToFileUtil.writeFileDataValue(mCustomSensorInfo.toString());
+            recordSensorDataToLogFile(mCustomSensorInfo);
         }
 
         @Override
@@ -279,38 +333,113 @@ public class PhoneDataService extends Service {
         mSb.append("type");
         mSb.append(",");
         mSb.append("time");
-        mSb.append(",");
-        mSb.append("accelerometer_x");
-        mSb.append(",");
-        mSb.append("accelerometer_y");
-        mSb.append(",");
-        mSb.append("accelerometer_z");
-        mSb.append(",");
-        mSb.append("linear_acceleration_x");
-        mSb.append(",");
-        mSb.append("linear_acceleration_y");
-        mSb.append(",");
-        mSb.append("linear_acceleration_z");
-        mSb.append(",");
-        mSb.append("gyroscope_x");
-        mSb.append(",");
-        mSb.append("gyroscope_y");
-        mSb.append(",");
-        mSb.append("gyroscope_z");
-        mSb.append(",");
-        mSb.append("magnetometer_x");
-        mSb.append(",");
-        mSb.append("magnetometer_y");
-        mSb.append(",");
-        mSb.append("magnetometer_z");
-        mSb.append(",");
-        mSb.append("azimuth");
-        mSb.append(",");
-        mSb.append("pitch");
-        mSb.append(",");
-        mSb.append("roll");
+
+        if (mAccSensor != null) {
+            mSb.append(",");
+            mSb.append("accelerometer_x");
+            mSb.append(",");
+            mSb.append("accelerometer_y");
+            mSb.append(",");
+            mSb.append("accelerometer_z");
+        }
+
+        if(mLineAccSensor != null) {
+            mSb.append(",");
+            mSb.append("linear_acceleration_x");
+            mSb.append(",");
+            mSb.append("linear_acceleration_y");
+            mSb.append(",");
+            mSb.append("linear_acceleration_z");
+        }
+
+        if (mGyroSensor != null) {
+            mSb.append(",");
+            mSb.append("gyroscope_x");
+            mSb.append(",");
+            mSb.append("gyroscope_y");
+            mSb.append(",");
+            mSb.append("gyroscope_z");
+        }
+
+
+        if (mMagneticSensor != null) {
+            mSb.append(",");
+            mSb.append("magnetometer_x");
+            mSb.append(",");
+            mSb.append("magnetometer_y");
+            mSb.append(",");
+            mSb.append("magnetometer_z");
+        }
+
+        if (mOrientationSensor != null) {
+            mSb.append(",");
+            mSb.append("azimuth");
+            mSb.append(",");
+            mSb.append("pitch");
+            mSb.append(",");
+            mSb.append("roll");
+        }
+
 
         DataToFileUtil.writeFileDataValue(mSb.toString());
     }
 
+    private void recordSensorDataToLogFile(CustomSensorInfo mSensor) {
+        StringBuilder mStringBuilder = new StringBuilder();
+        mStringBuilder.append(mSensor.user_id);
+        mStringBuilder.append(",");
+
+        mStringBuilder.append(mSensor.type);
+        mStringBuilder.append(",");
+
+        mStringBuilder.append(System.currentTimeMillis());
+
+        if (mAccSensor != null) {
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.accelerometer_x);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.accelerometer_y);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.accelerometer_z);
+        }
+
+        if (mLineAccSensor != null) {
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.linear_acceleration_x);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.linear_acceleration_y);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.linear_acceleration_z);
+        }
+
+        if (mGyroSensor != null) {
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.gyroscope_x);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.gyroscope_y);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.gyroscope_z);
+        }
+
+        if (mMagneticSensor != null) {
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.magnetometer_x);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.magnetometer_y);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.magnetometer_z);
+        }
+
+        if (mOrientationSensor != null) {
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.azimuth);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.pitch);
+            mStringBuilder.append(",");
+            mStringBuilder.append(mSensor.roll);
+        }
+
+        DataToFileUtil.writeFileDataValue(mStringBuilder.toString());
+
+    }
 }
