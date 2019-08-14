@@ -45,6 +45,8 @@ public class PhoneDataService extends Service {
     public static final String ACTION_RECORD_SENSOR_INFO = "action_record_sensor_info";
 
     private final boolean IS_WAKE_UP = false;
+    private final int SENSOR_DELAY_TIME = SensorManager.SENSOR_DELAY_GAME;
+
     private static final int MSG_VIRTUAL_ORIENTATION_SENSOR_CAL = 0;
 
     private String mFileName;
@@ -265,31 +267,31 @@ public class PhoneDataService extends Service {
         mCustomSensorInfo.isFistLoading = true;
 
         if (null != mAccSensor) {
-            mSensorManager.registerListener(mSensorEventListener, mAccSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(mSensorEventListener, mAccSensor, SENSOR_DELAY_TIME);
         } else {
             Log.w(TAG, "mAccSensor sensor is non-existent");
         }
 
         if (null != mLineAccSensor) {
-            mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(mSensorEventListener, mLineAccSensor, SENSOR_DELAY_TIME);
         } else {
             Log.w(TAG, "mLineAccSensor sensor is non-existent");
         }
 
         if (null != mGyroSensor) {
-            mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(mSensorEventListener, mGyroSensor, SENSOR_DELAY_TIME);
         } else {
             Log.w(TAG, "mGyroSensor sensor is non-existent");
         }
 
         if(null != mMagneticSensor) {
-            mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(mSensorEventListener, mMagneticSensor, SENSOR_DELAY_TIME);
         } else {
             Log.w(TAG, "mMagneticSensor sensor is non-existent");
         }
 
         if (mOrientationSensor != null) {
-            mSensorManager.registerListener(mSensorEventListener, mOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(mSensorEventListener, mOrientationSensor, SENSOR_DELAY_TIME);
             isVirtualOrientationSensorSupport = false;
         } else {
             Log.w(TAG, "orientation sensor is non-existent");
