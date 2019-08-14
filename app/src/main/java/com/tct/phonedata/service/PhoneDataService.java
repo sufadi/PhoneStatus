@@ -23,6 +23,7 @@ import com.tct.phonedata.R;
 import com.tct.phonedata.bean.CustomSensorInfo;
 import com.tct.phonedata.bean.SensorInfoSorted;
 import com.tct.phonedata.ui.MainActivity;
+import com.tct.phonedata.utils.AlertWakeLock;
 import com.tct.phonedata.utils.DataToFileUtil;
 import com.tct.phonedata.utils.DateTimeUtil;
 import com.tct.phonedata.utils.MyConstant;
@@ -43,6 +44,7 @@ public class PhoneDataService extends Service {
     public static final String ACTION_STOP_TEST = "action_stop_test";
     public static final String ACTION_RECORD_SENSOR_INFO = "action_record_sensor_info";
 
+    private final boolean IS_WAKE_UP = false;
     private static final int MSG_VIRTUAL_ORIENTATION_SENSOR_CAL = 0;
 
     private String mFileName;
@@ -140,6 +142,8 @@ public class PhoneDataService extends Service {
         Log.d(TAG, "PhoneDataService onStartCommand mAction : " + mAction);
 
         if (ACTION_START_TEST.equals(mAction)) {
+            AlertWakeLock.acquireCpuWakeLock(this);
+
             mSceneMode = intent.getIntExtra(MainActivity.KEY_SCENE_MODE, 0);
             Log.d(TAG, "PhoneDataService SceneMode = " + mSceneMode);
 
@@ -147,6 +151,8 @@ public class PhoneDataService extends Service {
 
             registerSensorListener();
         } else if(ACTION_STOP_TEST.equals(mAction)) {
+            AlertWakeLock.releaseCpuLock();
+
             stopForeground(true);
 
             unRegisterSensorListener();
@@ -240,11 +246,11 @@ public class PhoneDataService extends Service {
     private void initSensors() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, true);
-        mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, true);
-        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE, true);
-        mMagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD, true);
-        mOrientationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION, true);
+        mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, IS_WAKE_UP);
+        mLineAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION, IS_WAKE_UP);
+        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE, IS_WAKE_UP);
+        mMagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD, IS_WAKE_UP);
+        mOrientationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION, IS_WAKE_UP);
     }
 
 

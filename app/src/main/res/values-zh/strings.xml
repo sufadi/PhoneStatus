@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Phone-Sensor数据</string>
+
+    <string name="btn_start">开始记录</string>
+    <string name="btn_stop">结束记录</string>
+
+    <string name="notification_title">Phone 数据</string>
+    <string name="notification_Content">运行中...</string>
+
+    <string name="spinner_tv_title">请选择场景模式:</string>
+</resources>

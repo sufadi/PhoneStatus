@@ -82,8 +82,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initValues() {
         StringBuilder mSb = new StringBuilder();
         mSb.append("功能说明:\n");
-        mSb.append("1. 实时监听所有传感器数据，并保存到 SD card 中，用于导出分析\n");
-        mSb.append("2. 数据结果存放位置如下:\n");
+        mSb.append("1. 实时监听传感器数据(加速度、线性加速度、陀螺仪、磁力、方向传感器);\n");
+        mSb.append("2. 数据采集结果存放位置如下:\n");
         mSb.append(DataToFileUtil.FILE_PATH);
         mSb.append("\n");
 
